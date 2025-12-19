@@ -1,0 +1,81 @@
+@using Markdig
+
+<div class="spell-card">
+    <span class="spell-name">@Spell.Name @(Spell.IsRitual ? "[R]" : String.Empty)</span>
+    <span class="subtitle">@Subtitle</span>
+    <div class="attributes">
+        <span class="attribute-line"><label>Casting time.</label>@Spell.CastingTime @(Spell.IsRitual ? "(+10 Minutes as Ritual)" : String.Empty)</span>
+        <span class="attribute-line"><label>Range/Area.</label>@RangeArea</span>
+        <span class="attribute-line"><label>Components.</label>@GetComponentString()</span>
+        <span class="attribute-line"><label>Duration.</label>@Duration</span>
+        @if (!String.IsNullOrWhiteSpace(Spell.AttackSave))
+        {
+            <span class="attribute-line"><label>Attack/Save.</label>@Spell.AttackSave</span>
+        }
+    </div>
+    <span class="description @DescriptionClass">@((MarkupString)Markdown.ToHtml(Spell.Description))</span>
+    @if (!String.IsNullOrWhiteSpace(Spell.MaterialComponent))
+    {
+        <span class="material-component">* @Spell.MaterialComponent</span>
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public Models.Spell Spell { get; set; }
+
+    private string Subtitle => Spell.Level switch
+    {
+        0 => $"{Spell.School} cantrip",
+        1 => $"1st level {Spell.School} spell",
+        2 => $"2nd level {Spell.School} spell",
+        3 => $"3rd level {Spell.School} spell",
+        _ => $"{Spell.Level}th level {Spell.School} spell"
+    };
+
+    private string RangeArea => $"{Spell.Range}{(String.IsNullOrWhiteSpace(Spell.Area) ? String.Empty : $"({Spell.Area})")}";
+
+    private string Duration => !Spell.RequiresConcentration
+        ? Spell.Duration
+        : $"Concentration up to {Spell.Duration}";
+
+    private String GetComponentString()
+    {
+        string retVal = Spell.HasVocalComponent ? "V" : String.Empty;
+        retVal += Spell.HasSomaticComponent
+            ? retVal.Length > 0 ? ", S" : "S"
+            : String.Empty;
+        retVal += !String.IsNullOrWhiteSpace(Spell.MaterialComponent) 
+            ? retVal.Length > 0 ? ", M*" : "M*"
+            : String.Empty;
+
+        return retVal;
+    }
+
+    private string DescriptionClass
+    {
+        get
+        {
+            string retVal = "large";
+            int descriptionLength = Spell.Description.Length;
+
+            if (descriptionLength > 300)
+            {
+                retVal = "medium";
+            }
+
+            if (descriptionLength > 800)
+            {
+                retVal = "small";
+            }
+
+            if (descriptionLength > 1100)
+            {
+                retVal = "tiny";
+            }
+
+            return retVal;
+        }
+    }
+
+}

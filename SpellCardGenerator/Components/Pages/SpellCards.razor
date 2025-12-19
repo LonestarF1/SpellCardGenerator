@@ -1,0 +1,34 @@
+@page "/SpellCards"
+
+@using System.Text.Json
+@layout BlankLayout
+
+@while (_index < _spellList.Count)
+{
+    <div class="spell-page">
+        @for (int counter = 1; counter <= 9; counter++)
+        {
+            <SpellCard Spell="_spellList[_index]" />
+            _index++;
+            if (_index >= _spellList.Count)
+            {
+                break;
+            }
+        }
+    </div>
+}
+
+@code {
+    private int _index = 0;
+    private List<Models.Spell> _spellList;
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        
+        if (!File.Exists("./wwwroot/resources/druid.json")) { return; }
+        string spellJson = new StreamReader("./wwwroot/resources/druid.json").ReadToEnd();
+        _spellList = JsonSerializer.Deserialize<List<Models.Spell>>(spellJson) ?? [];
+    }
+
+}

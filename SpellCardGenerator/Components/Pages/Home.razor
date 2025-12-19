@@ -1,0 +1,29 @@
+﻿@page "/"
+@using System.Text.Json
+@using Markdig;
+
+<PageTitle>Home</PageTitle>
+
+<h1>Hello, world!</h1>
+
+Welcome to your new app.
+
+<div class="spell-list">
+    @foreach (var spell in LoadedSpells)
+    {
+        <SpellCard Spell="spell" />
+    }
+</div>
+
+@code {
+
+    private List<Models.Spell> LoadedSpells { get; set; } = [];
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        
+        
+    }
+
+}
