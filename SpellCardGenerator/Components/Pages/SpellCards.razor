@@ -1,4 +1,4 @@
-@page "/SpellCards"
+@page "/SpellCards/{LevelFilter:int?}"
 
 @using System.Text.Json
 @layout BlankLayout
@@ -21,6 +21,9 @@
 @code {
     private int _index = 0;
     private List<Models.Spell> _spellList;
+    
+    [Parameter]
+    public int? LevelFilter { get; set; }
 
     protected override void OnInitialized()
     {
@@ -29,6 +32,10 @@
         if (!File.Exists("./wwwroot/resources/druid.json")) { return; }
         string spellJson = new StreamReader("./wwwroot/resources/druid.json").ReadToEnd();
         _spellList = JsonSerializer.Deserialize<List<Models.Spell>>(spellJson) ?? [];
+        
+        if (LevelFilter == null) { return; }
+
+        _spellList = _spellList.Where(e => e.Level == LevelFilter).ToList();
     }
 
 }

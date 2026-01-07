@@ -59,17 +59,19 @@
             string retVal = "large";
             int descriptionLength = Spell.Description.Length;
 
-            if (descriptionLength > 300)
+            if (descriptionLength > 400)
             {
                 retVal = "medium";
             }
 
-            if (descriptionLength > 800)
+            if ((descriptionLength > 750 && !String.IsNullOrWhiteSpace(Spell.AttackSave)) 
+                || descriptionLength > 800)
             {
                 retVal = "small";
             }
 
-            if (descriptionLength > 1100)
+            if ((descriptionLength > 900 && !String.IsNullOrWhiteSpace(Spell.AttackSave)) 
+                || descriptionLength > 1000)
             {
                 retVal = "tiny";
             }
