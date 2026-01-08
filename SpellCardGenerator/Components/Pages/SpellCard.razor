@@ -1,6 +1,6 @@
 @using Markdig
 
-<div class="spell-card">
+<div class="spell-card" id="spell-card-@Spell.Id">
     <span class="spell-name">@Spell.Name @(Spell.IsRitual ? "[R]" : String.Empty)</span>
     <span class="subtitle">@Subtitle</span>
     <div class="attributes">

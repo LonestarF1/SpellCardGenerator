@@ -1,7 +1,37 @@
 @page "/SpellCards/{LevelFilter:int?}"
+@page "/SpellCards/Export/{LevelFilter:int?}"
 
 @using System.Text.Json
 @layout BlankLayout
+@rendermode InteractiveServer
+
+@inject NavigationManager _navManager
+@inject IJSRuntime _js
+
+@if (DoExport)
+{
+    <script src="scripts/html2canvas.min.js"></script>
+    <script>
+        window.takeScreenshot = async function(elementId, fileName) {
+            const element = document.querySelector("#" + elementId);
+            if (!element) {
+                console.error("Element not found:", elementId);
+                return;
+            }
+    
+            const canvas = await html2canvas(element, { scale: 12 });
+            const imgDataUrl = canvas.toDataURL("image/svg");
+    
+            // Trigger a download
+            const link = document.createElement("a");
+            link.href = imgDataUrl;
+            link.download = fileName || "image.svg";
+            link.click();
+            
+            return imgDataUrl; // Returns the image data as a Base64 string if needed in C#
+        };
+    </script>
+}
 
 @while (_index < _spellList.Count)
 {
@@ -25,6 +55,8 @@
     [Parameter]
     public int? LevelFilter { get; set; }
 
+    public bool DoExport => _navManager.Uri.ToLowerInvariant().Contains("export");
+
     protected override void OnInitialized()
     {
         base.OnInitialized();
@@ -36,6 +68,19 @@
         if (LevelFilter == null) { return; }
 
         _spellList = _spellList.Where(e => e.Level == LevelFilter).ToList();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        foreach (var spell in _spellList)
+        {
+            await GenerateSpellCardImage($"spell-card-{spell.Id}");
+        }
+    }
+
+    private async Task GenerateSpellCardImage(string cardId)
+    {
+        await _js.InvokeVoidAsync("takeScreenshot", cardId, $"{cardId}.svg");
     }
 
 }
