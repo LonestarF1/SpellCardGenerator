@@ -4,3 +4,6 @@ obj/
 riderModule.iml
 /_ReSharper.Caches/
 /wwwroot/resources/*
+/.vs/SpellCardGenerator
+/.vs/ProjectEvaluation
+/AGENTS.md

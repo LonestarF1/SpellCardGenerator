@@ -33,46 +33,45 @@
     </script>
 }
 
-@while (_index < _spellList.Count)
+@for (int index = 0; index < FilteredSpells.Count;)
 {
     <div class="spell-page">
-        @for (int counter = 1; counter <= 9; counter++)
+        @for (int counter = 1; counter <= 9 && index < FilteredSpells.Count; counter++, index++)
         {
-            <SpellCard Spell="_spellList[_index]" />
-            _index++;
-            if (_index >= _spellList.Count)
-            {
-                break;
-            }
+            <SpellCard Spell="FilteredSpells[index]" />
         }
     </div>
 }
 
 @code {
-    private int _index = 0;
-    private List<Models.Spell> _spellList;
-    
     [Parameter]
     public int? LevelFilter { get; set; }
 
+    private List<Models.Spell>? _loadedSpells;
+    private bool _hasExported;
+
+    private List<Models.Spell> FilteredSpells => _loadedSpells == null ? [] 
+        : LevelFilter == null ? _loadedSpells.ToList() : _loadedSpells.Where(e => e.Level == LevelFilter).ToList();
+
     public bool DoExport => _navManager.Uri.ToLowerInvariant().Contains("export");
-
-    protected override void OnInitialized()
-    {
-        base.OnInitialized();
-        
-        if (!File.Exists("./wwwroot/resources/druid.json")) { return; }
-        string spellJson = new StreamReader("./wwwroot/resources/druid.json").ReadToEnd();
-        _spellList = JsonSerializer.Deserialize<List<Models.Spell>>(spellJson) ?? [];
-        
-        if (LevelFilter == null) { return; }
-
-        _spellList = _spellList.Where(e => e.Level == LevelFilter).ToList();
-    }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        foreach (var spell in _spellList)
+        _loadedSpells ??= await LoadCachedSpellsAsync();
+
+        if (_loadedSpells == null)
+        {
+            _navManager.NavigateTo("/");
+            return;
+        }
+
+        this.StateHasChanged();
+
+        if (!DoExport || _hasExported) { return; }
+
+        _hasExported = true;
+
+        foreach (var spell in FilteredSpells)
         {
             await GenerateSpellCardImage($"spell-card-{spell.Id}");
         }
@@ -80,7 +79,44 @@
 
     private async Task GenerateSpellCardImage(string cardId)
     {
-        await _js.InvokeVoidAsync("takeScreenshot", cardId, $"{cardId}.svg");
+        try
+        {
+            await _js.InvokeVoidAsync("takeScreenshot", cardId, $"{cardId}.svg");
+        }
+        catch (JSException ex)
+        {
+            Console.Error.WriteLine($"Failed to generate spell card image: {ex.Message}");
+        }
     }
 
+    private async Task<List<Models.Spell>?> LoadCachedSpellsAsync()
+    {
+        string? cachedJson;
+
+        try
+        {
+            cachedJson = await _js.InvokeAsync<string?>("spellCache.getSpellJson");
+
+            if (string.IsNullOrWhiteSpace(cachedJson))
+            {
+                return null;
+            }
+
+            var spells = JsonSerializer.Deserialize<List<Models.Spell>>(cachedJson);
+
+            if (spells != null && spells.Count > 0)
+            {
+                return spells;
+            }
+
+            await _js.InvokeVoidAsync("spellCache.clearSpellJson");
+        }
+        catch(JSException ex)
+        {
+            Console.Error.WriteLine($"Failed to load cached spells from localStorage: {ex.Message}");
+            return null;
+        }
+
+        return null;
+    }
 }
