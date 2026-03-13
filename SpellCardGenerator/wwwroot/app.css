@@ -1,3 +1,26 @@
+:root {
+    --page-width: 8.5in;
+    --page-height: 11in;
+    --page-margin: 0.25in;
+    --printable-width: calc(var(--page-width) - (2 * var(--page-margin)));
+    --printable-height: calc(var(--page-height) - (2 * var(--page-margin)));
+    --grid-columns: 3;
+    --grid-rows: 3;
+    --card-content-width: 2.48in;
+    --card-content-height: 3.46in;
+    --card-border-width: 0.75pt;
+    --card-width: calc(var(--card-content-width) + (2 * var(--card-border-width)));
+    --card-height: calc(var(--card-content-height) + (2 * var(--card-border-width)));
+    --card-pitch-x: var(--card-width);
+    --card-pitch-y: var(--card-height);
+    --grid-width: calc(var(--grid-columns) * var(--card-pitch-x));
+    --grid-height: calc(var(--grid-rows) * var(--card-pitch-y));
+    --grid-offset-x: calc((var(--printable-width) - var(--grid-width)) / 2);
+    --grid-offset-y: calc((var(--printable-height) - var(--grid-height)) / 2);
+    --cut-guide-color: rgba(0, 0, 0, 0.55);
+    --cut-guide-width: 1pt;
+}
+
 html, body {
     font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
 }
@@ -59,29 +82,98 @@ h1:focus {
     text-align: start;
 }
 
-.spell-page
-{
-    display: flex;
+.spell-page {
+    display: grid;
+    position: relative;
 
-    width: 8.0in;
-    max-height: 10.5in;
+    width: var(--printable-width);
+    height: var(--printable-height);
 
-    flex-direction: row;
-    flex-wrap: wrap;
-    justify-content: flex-start;
+    grid-template-columns: repeat(var(--grid-columns), var(--card-pitch-x));
+    grid-template-rows: repeat(var(--grid-rows), var(--card-pitch-y));
+    place-content: center;
 
+    margin: 0 auto;
     page-break-after: always;
+    break-after: page;
+}
+
+.cut-guides {
+    position: absolute;
+    inset: 0;
+    display: none;
+    pointer-events: none;
+    z-index: 2;
+}
+
+.cut-guide {
+    position: absolute;
+}
+
+.cut-guide-v {
+    top: 0;
+    bottom: 0;
+    width: var(--cut-guide-width);
+    left: calc(var(--grid-offset-x) + (var(--cut-index) * var(--card-pitch-x)));
+    transform: translateX(calc(-1 * var(--cut-guide-width) / 2));
+}
+
+.cut-guide-v::before,
+.cut-guide-v::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    width: var(--cut-guide-width);
+    background-color: var(--cut-guide-color);
+}
+
+.cut-guide-v::before {
+    top: 0;
+    height: var(--grid-offset-y);
+}
+
+.cut-guide-v::after {
+    top: calc(var(--grid-offset-y) + var(--grid-height));
+    bottom: 0;
+}
+
+.cut-guide-h {
+    left: 0;
+    right: 0;
+    height: var(--cut-guide-width);
+    top: calc(var(--grid-offset-y) + (var(--cut-index) * var(--card-pitch-y)));
+    transform: translateY(calc(-1 * var(--cut-guide-width) / 2));
+}
+
+.cut-guide-h::before,
+.cut-guide-h::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    height: var(--cut-guide-width);
+    background-color: var(--cut-guide-color);
+}
+
+.cut-guide-h::before {
+    left: 0;
+    width: var(--grid-offset-x);
+}
+
+.cut-guide-h::after {
+    left: calc(var(--grid-offset-x) + var(--grid-width));
+    right: 0;
 }
 
 .spell-card
 {
     display: block;
 
-    width: 2.48in;
-    height: 3.46in;
+    box-sizing: border-box;
+    width: var(--card-width);
+    height: var(--card-height);
 
     border-style: solid;
-    border-width: 1px;
+    border-width: var(--card-border-width);
     border-radius: 2mm;
     
     overflow: hidden;
@@ -194,4 +286,31 @@ h1:focus {
 
 .spell-card .description ul {
     padding-left: 10px;
+}
+
+@page {
+    size: Letter portrait;
+    margin: 0.25in;
+}
+
+@media print {
+    html,
+    body {
+        width: var(--page-width);
+        height: var(--page-height);
+        margin: 0;
+    }
+
+    body {
+        print-color-adjust: exact;
+        -webkit-print-color-adjust: exact;
+    }
+
+    .cut-guides {
+        display: block;
+    }
+
+    .spell-card {
+        border-radius: 0;
+    }
 }

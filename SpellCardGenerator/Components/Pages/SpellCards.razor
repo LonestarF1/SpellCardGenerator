@@ -36,6 +36,18 @@
 @for (int index = 0; index < FilteredSpells.Count;)
 {
     <div class="spell-page">
+        <div class="cut-guides" aria-hidden="true">
+            @for (int guideIndex = 0; guideIndex <= 3; guideIndex++)
+            {
+                <span class="cut-guide cut-guide-v" style="--cut-index:@guideIndex;"></span>
+            }
+
+            @for (int guideIndex = 0; guideIndex <= 3; guideIndex++)
+            {
+                <span class="cut-guide cut-guide-h" style="--cut-index:@guideIndex;"></span>
+            }
+        </div>
+
         @for (int counter = 1; counter <= 9 && index < FilteredSpells.Count; counter++, index++)
         {
             <SpellCard Spell="FilteredSpells[index]" />
