@@ -172,7 +172,7 @@
         var spells = JsonSerializer.Deserialize<List<Models.Spell>>(json);
         if (spells == null)
         {
-            return;
+            throw new JsonException("Invalid Json. Deserialized to null.");
         }
 
         _loadedSpellCount = spells.Count;

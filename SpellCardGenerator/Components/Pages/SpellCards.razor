@@ -48,24 +48,38 @@
     public int? LevelFilter { get; set; }
 
     private List<Models.Spell>? _loadedSpells;
+    private List<Models.Spell>? LoadedSpells
+    {
+        get => _loadedSpells;
+        set
+        {
+            _loadedSpells = value;
+            FilteredSpells = _loadedSpells == null ? []
+                : LevelFilter == null ? _loadedSpells.ToList() : _loadedSpells.Where(e => e.Level == LevelFilter).ToList();
+        }
+    }
     private bool _hasExported;
 
-    private List<Models.Spell> FilteredSpells => _loadedSpells == null ? [] 
-        : LevelFilter == null ? _loadedSpells.ToList() : _loadedSpells.Where(e => e.Level == LevelFilter).ToList();
+    private List<Models.Spell> FilteredSpells { get; set; } = [];
 
     public bool DoExport => _navManager.Uri.ToLowerInvariant().Contains("export");
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        _loadedSpells ??= await LoadCachedSpellsAsync();
+        bool shouldRenderAgain = ( LoadedSpells == null );
+        LoadedSpells ??= await LoadCachedSpellsAsync();
 
-        if (_loadedSpells == null)
+        if (LoadedSpells == null)
         {
             _navManager.NavigateTo("/");
             return;
         }
 
-        this.StateHasChanged();
+        if (shouldRenderAgain)
+        {
+            this.StateHasChanged();
+            return;
+        }
 
         if (!DoExport || _hasExported) { return; }
 
@@ -115,6 +129,10 @@
         {
             Console.Error.WriteLine($"Failed to load cached spells from localStorage: {ex.Message}");
             return null;
+        }
+        catch (JsonException ex)
+        {
+            Console.Error.WriteLine($"Cached spell data is invalid. {ex.Message}");
         }
 
         return null;
